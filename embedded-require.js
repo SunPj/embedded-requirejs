@@ -6,7 +6,7 @@
         const delegated = new Set();
 
         function add(name, dependencies, factory) {
-            console.log(`Registered: ${name}`);
+            console.log(`Registered: ${name}, [${dependencies}]`);
 
             dependencies = resolveExclamation(dependencies);
 
@@ -54,10 +54,11 @@
         function urlFor(name) {
             return $('script[src]')
                 .map(function (s) {
-                    return $(this).attr('src')
+                    return {src: $(this).attr('src'), name: $(this).attr('data-name')}
                 })
                 .toArray()
-                .filter(s => typeof s === 'string' && s.endsWith(name))[0];
+                .filter(s => s.src.endsWith(name) || s.name === name)
+                .map(s => s.src)[0];
         }
 
         function getDependencies(dependencies) {
@@ -145,7 +146,6 @@
         }
     })();
 
-
     if (typeof window.define === 'undefined') {
 
         window.define = function (name, dependencies, factory) {
@@ -171,7 +171,8 @@
 
         window.define.amd = true;
 
-        window.defineLast = function (name) {
+        window.registerDependency = function (script) {
+            const name = $(script).attr('data-name');
             dependenciesCache.renameDependency(nameGenerator.last(), name);
         };
 
